@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-ink: #1C2333;
+  --color-ink-hover: #2A3347;
+  --color-parchment: #F6F1E7;
+  --color-teal: #3D7A6E;
+  --color-amber: #C88A2C;
+  --color-coral: #D85A30;
+  --color-border-warm: #DDD5C3;
+  --color-text-secondary: #6B6555;
+  --color-text-label: #4A4638;
+  --color-placeholder: #9C9585;
 }
 
 @media (prefers-color-scheme: dark) {
