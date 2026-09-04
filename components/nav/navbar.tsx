@@ -8,7 +8,7 @@
     const links = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/books", label: "Books" },
-    // { href: "/loans", label: "Loans" }, // add later
+    { href: "/loans", label: "Loans" },
     ];
 
     export function Navbar({ userName }: { userName: string }) {
