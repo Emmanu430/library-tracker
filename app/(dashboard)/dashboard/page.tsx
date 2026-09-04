@@ -2,7 +2,9 @@
     import { redirect } from "next/navigation";
     import { authOptions } from "@/lib/auth";
     import { prisma } from "@/lib/prisma";
-    import { BookOpen, Plus, Search, Clock, AlertCircle } from "lucide-react";
+    import Link from "next/link";
+    import { DashboardSearch } from "@/components/dashboard/dashboard-search";
+    import { BookOpen, Plus, Clock, AlertCircle } from "lucide-react";
 
     export default async function DashboardPage() {
     const session = await getServerSession(authOptions);
@@ -61,10 +63,12 @@
                 Welcome back, {session.user.name}.
                 </p>
             </div>
-            <button className="flex items-center gap-2 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-parchment hover:bg-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2">
+            <Link
+                href="/books/new"
+                className="flex items-center gap-2 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-parchment hover:bg-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2">
                 <Plus className="h-4 w-4" />
                 Add book
-            </button>
+            </Link>
             </div>
 
             {/* Stat cards */}
@@ -101,14 +105,7 @@
             </div>
 
             {/* Search bar */}
-            <div className="relative mb-6 max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" />
-            <input
-                type="text"
-                placeholder="Search your books..."
-                className="w-full rounded-md border border-border-warm bg-white py-2.5 pl-10 pr-3 text-sm text-ink placeholder:text-placeholder focus:border-teal focus:ring-2 focus:ring-teal/40 focus:outline-none"
-            />
-            </div>
+            <DashboardSearch />
 
             {/* Recent loans */}
             <div className="overflow-hidden rounded-xl border border-border-warm bg-white">

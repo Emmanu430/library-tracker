@@ -3,15 +3,21 @@
     import Link from "next/link";
     import { authOptions } from "@/lib/auth";
     import { prisma } from "@/lib/prisma";
-    import { Plus, BookOpen } from "lucide-react";
+    import { Plus } from "lucide-react";
     import { BookGrid } from "@/components/books/book-grid";
 
-    export default async function BooksPage() {
+    export default async function BooksPage({
+    searchParams,
+    }: {
+    searchParams: Promise<{ search?: string }>;
+    }) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
         redirect("/login");
     }
+
+    const { search } = await searchParams;
 
     const books = await prisma.book.findMany({
         where: { ownerId: session.user.id },
@@ -22,15 +28,6 @@
         },
         orderBy: { title: "asc" },
     });
-
-    const initials = session.user.name
-        ? session.user.name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2)
-        : "?";
 
     return (
         <div className="min-h-screen w-full bg-parchment">
@@ -51,7 +48,7 @@
             </Link>
             </div>
 
-            <BookGrid books={books} />
+            <BookGrid books={books} initialSearch={search ?? ""} />
         </div>
         </div>
     );
