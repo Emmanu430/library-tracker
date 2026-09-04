@@ -3,7 +3,10 @@
     import Link from "next/link";
     import { authOptions } from "@/lib/auth";
     import { prisma } from "@/lib/prisma";
-    import { ArrowLeft, BookOpen, User } from "lucide-react";
+    import { ArrowLeft, BookOpen, User, Pencil } from "lucide-react";
+    import { LendBookButton } from "@/components/books/lend-book-button";
+    import { MarkReturnedButton } from "@/components/books/mark-returned-button";
+    import { DeleteBookButton } from "@/components/books/delete-book-button";
 
     export default async function BookDetailPage({
     params,
@@ -58,16 +61,37 @@
 
             {/* Header: cover | info */}
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-[220px_1fr]">
-            <div className="flex aspect-[2/3] items-center justify-center rounded-xl bg-ink">
+            <div className="flex aspect-[2/3] items-center justify-center overflow-hidden rounded-xl bg-ink">
+                {book.coverUrl ? (
+                <img
+                    src={book.coverUrl}
+                    alt={book.title}
+                    className="h-full w-full object-cover"
+                />
+                ) : (
                 <BookOpen className="h-10 w-10 text-parchment/50" />
+                )}
             </div>
 
             <div className="flex flex-col">
+                <div className="mb-3 flex items-center justify-between">
                 <span
-                className={`mb-3 inline-block w-fit rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[status]}`}
+                    className={`inline-block w-fit rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[status]}`}
                 >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
+                <div className="flex items-center gap-4">
+                    <Link
+                    href={`/books/${book.id}/edit`}
+                    className="flex items-center gap-1.5 text-sm text-teal hover:underline"
+                    >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit book
+                    </Link>
+                    <DeleteBookButton bookId={book.id} />
+                </div>
+                </div>
+
                 <h1 className="text-3xl font-medium text-ink">{book.title}</h1>
                 <p className="mt-1 text-base text-text-secondary">{book.author}</p>
 
@@ -88,18 +112,19 @@
 
                 <div className="mt-auto pt-6">
                 {activeLoan ? (
-                    <div className="rounded-md border border-amber/20 bg-amber/10 px-4 py-3 text-sm text-ink">
-                    Currently lent to{" "}
-                    <span className="font-medium">{activeLoan.borrowerName}</span>,
-                    due{" "}
-                    <span className="font-medium">
+                    <div className="flex items-center justify-between rounded-md border border-amber/20 bg-amber/10 px-4 py-3 text-sm text-ink">
+                    <span>
+                        Currently lent to{" "}
+                        <span className="font-medium">{activeLoan.borrowerName}</span>,
+                        due{" "}
+                        <span className="font-medium">
                         {activeLoan.dueDate.toLocaleDateString()}
+                        </span>
                     </span>
+                    <MarkReturnedButton loanId={activeLoan.id} />
                     </div>
                 ) : (
-                    <button className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-parchment hover:bg-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2">
-                    Lend this book
-                    </button>
+                    <LendBookButton bookId={book.id} />
                 )}
                 </div>
             </div>

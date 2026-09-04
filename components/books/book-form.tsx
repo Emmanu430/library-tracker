@@ -4,15 +4,31 @@
     import { useRouter } from "next/navigation";
     import { Upload, X } from "lucide-react";
 
-    export function BookForm() {
+    type BookFormProps = {
+    bookId?: string;
+    initialData?: {
+        title: string;
+        author: string;
+        genre: string | null;
+        isbn: string | null;
+        coverUrl: string | null;
+    };
+    };
+
+    export function BookForm({bookId, initialData }: BookFormProps) {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const isEditMode = Boolean(bookId);
 
-    const [title, setTitle] = useState("");
-    const [author, setAuthor] = useState("");
-    const [genre, setGenre] = useState("");
-    const [isbn, setIsbn] = useState("");
-    const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+    const [title, setTitle] = useState(initialData?.title ?? "");
+    const [author, setAuthor] = useState(initialData?.author ?? "");
+    const [isbn, setIsbn] = useState(initialData?.isbn ?? "");
+    const [genre, setGenre] = useState(initialData?.genre ?? "");
+    const [coverPreview, setCoverPreview] = useState<string | null>(
+    initialData?.coverUrl ?? null);
+    const [lookupLoading, setLookupLoading] = useState(false);
+    const [lookupError, setLookupError] = useState("");
     const [errors, setErrors] = useState<{ title?: string; author?: string }>({});
     const [loading, setLoading] = useState(false);
 
@@ -43,24 +59,85 @@
         setErrors({});
         setLoading(true);
 
-        const res = await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, author, genre, isbn }),
-        });
+    const url = isEditMode ? `/api/books/${bookId}` : "/api/books";
+    const method = isEditMode ? "PATCH" : "POST";
 
+            const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+        title,
+        author,
+        genre,
+        isbn,
+        coverUrl: coverPreview?.startsWith("blob:") ? null : coverPreview,
+        }),
+    });
         setLoading(false);
 
         if (res.ok) {
-        router.push("/books");
+        router.push(isEditMode ? `/books/${bookId}` :"/books");
+        router.refresh();
         }
     }
+    async function handleLookup() {
+        if (!isbn.trim()) return;
+
+        setLookupError("");
+        setLookupLoading(true);
+
+        try {
+            const res = await fetch(
+            `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
+            );
+            const data = await res.json();
+            const bookData = data[`ISBN:${isbn}`];
+
+            if (!bookData) {
+            setLookupError("No book found for this ISBN — enter details manually.");
+            setLookupLoading(false);
+            return;
+            }
+
+            setTitle(bookData.title ?? "");
+            setAuthor(bookData.authors?.[0]?.name ?? "");
+            setCoverPreview(`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`);
+        } catch {
+            setLookupError("Something went wrong looking that up — enter details manually.");
+        } finally {
+            setLookupLoading(false);
+        }
+}
 
     return (
         <form
         onSubmit={handleSubmit}
         className="rounded-xl border border-border-warm bg-white p-6 lg:p-8"
         >
+        <div className="mb-6">
+            <label htmlFor="isbn-lookup" className="mb-1.5 block text-sm text-text-label">
+                ISBN
+            </label>
+            <div className="flex gap-3">
+                <input
+                id="isbn-lookup"
+                type="text"
+                value={isbn}
+                onChange={(e) => setIsbn(e.target.value)}
+                placeholder="e.g. 9780143127550"
+                className="flex-1 rounded-md border border-border-warm bg-white px-3 py-2.5 text-sm text-ink focus:border-teal focus:ring-2 focus:ring-teal/40 focus:outline-none"
+                />
+                <button
+                type="button"
+                onClick={handleLookup}
+                disabled={lookupLoading}
+                className="rounded-md border border-border-warm px-4 py-2.5 text-sm font-medium text-ink hover:border-teal disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                {lookupLoading ? "Looking up..." : "Lookup"}
+                </button>
+            </div>
+            {lookupError && <p className="mt-1.5 text-xs text-coral">{lookupError}</p>}
+            </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-[160px_1fr]">
             {/* Cover upload */}
             <div className="relative aspect-[2/3] w-full max-w-[160px]">
@@ -155,20 +232,6 @@
             </div>
         </div>
 
-        {/* ISBN full-width */}
-        <div className="mt-4">
-            <label htmlFor="isbn" className="mb-1.5 block text-sm text-text-label">
-            ISBN
-            </label>
-            <input
-            id="isbn"
-            type="text"
-            value={isbn}
-            onChange={(e) => setIsbn(e.target.value)}
-            className="w-full rounded-md border border-border-warm bg-white px-3 py-2.5 text-sm text-ink focus:border-teal focus:ring-2 focus:ring-teal/40 focus:outline-none"
-            />
-        </div>
-
         {/* Actions */}
         <div className="mt-6 flex items-center gap-3 border-t border-[#EFE9DA] pt-6">
             <button
@@ -176,7 +239,7 @@
             disabled={loading}
             className="rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-parchment hover:bg-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-            {loading ? "Saving..." : "Save book"}
+            {loading ? "Saving..." :  isEditMode ? "Save changes" : "Save book"}
             </button>
             <button
             type="button"
