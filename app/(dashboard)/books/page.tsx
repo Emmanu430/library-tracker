@@ -34,19 +34,6 @@
 
     return (
         <div className="min-h-screen w-full bg-parchment">
-        {/* Top bar */}
-        <div className="border-b border-border-warm">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 lg:px-10">
-            <div className="flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-teal" />
-                <span className="font-serif text-xl text-ink">Athenaeum</span>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-sm font-medium text-parchment">
-                {initials}
-            </div>
-            </div>
-        </div>
-
         <div className="mx-auto max-w-6xl px-6 py-10 lg:px-10">
             <div className="mb-8 flex items-center justify-between">
             <div>
