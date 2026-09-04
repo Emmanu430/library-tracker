@@ -100,23 +100,35 @@
             </div>
         </div>
 
-        {/* Grid or empty state */}
-        {filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-border-warm bg-white py-16 text-center">
-            <BookOpen className="h-8 w-8 text-placeholder" />
-            <p className="text-sm text-text-secondary">No books match your filters.</p>
-            <button
-                onClick={() => {
-                setSearch("");
-                setGenreFilter("");
-                setStatusFilter("");
-                }}
-                className="text-sm text-teal hover:underline"
-            >
-                Clear filters
-            </button>
-            </div>
-        ) : (
+            {filtered.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-border-warm bg-white py-16 text-center">
+                    <BookOpen className="h-8 w-8 text-placeholder" />
+                    {books.length === 0 ? (
+                    <>
+                        <p className="text-sm text-text-secondary">
+                        Your library is empty. Add your first book to get started.
+                        </p>
+                        <Link href="/books/new" className="text-sm text-teal hover:underline">
+                        Add your first book
+                        </Link>
+                    </>
+                    ) : (
+                    <>
+                        <p className="text-sm text-text-secondary">No books match your filters.</p>
+                        <button
+                        onClick={() => {
+                            setSearch("");
+                            setGenreFilter("");
+                            setStatusFilter("");
+                        }}
+                        className="text-sm text-teal hover:underline"
+                        >
+                        Clear filters
+                        </button>
+                    </>
+                    )}
+                </div>
+                ) : (
             <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {filtered.map((book, i) => {
                 const status = getStatus(book);
@@ -129,10 +141,18 @@
                     className="group overflow-hidden rounded-xl border border-border-warm bg-white hover:border-teal hover:shadow-sm"
                 >
                     <div
-                    className="flex h-36 items-center justify-center"
-                    style={{ backgroundColor: color }}
-                    >
-                    <BookOpen className="h-8 w-8 text-white/70" />
+                        className="flex h-36 items-center justify-center overflow-hidden"
+                        style={book.coverUrl ? undefined : { backgroundColor: color }}
+                        >
+                        {book.coverUrl ? (
+                            <img
+                            src={book.coverUrl}
+                            alt={book.title}
+                            className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <BookOpen className="h-8 w-8 text-white/70" />
+                        )}
                     </div>
                     <div className="p-4">
                     <span
