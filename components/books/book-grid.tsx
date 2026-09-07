@@ -16,14 +16,16 @@
     author: string;
     genre: string | null;
     coverUrl: string | null;
+    copiesAvailable: number;
     loans: Loan[];
     };
 
     function getStatus(book: Book): "available" | "lent" | "overdue" {
-    const activeLoan = book.loans[0];
-    if (!activeLoan) return "available";
-    if (new Date(activeLoan.dueDate) < new Date()) return "overdue";
-    return "lent";
+    const activeLoans = book.loans.filter((loan) => !loan.returnedAt);
+    const copiesFree = book.copiesAvailable - activeLoans.length;
+    if (copiesFree > 0) return "available";
+    const hasOverdue = activeLoans.some((loan) => new Date(loan.dueDate) < new Date());
+    return hasOverdue ? "overdue" : "lent";
     }
 
     const statusStyles = {

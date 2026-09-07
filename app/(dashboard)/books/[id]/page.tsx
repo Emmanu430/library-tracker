@@ -3,10 +3,12 @@
     import Link from "next/link";
     import { authOptions } from "@/lib/auth";
     import { prisma } from "@/lib/prisma";
+    import { calculateFine } from "@/lib/fines";
     import { ArrowLeft, BookOpen, User, Pencil } from "lucide-react";
     import { LendBookButton } from "@/components/books/lend-book-button";
     import { MarkReturnedButton } from "@/components/books/mark-returned-button";
     import { DeleteBookButton } from "@/components/books/delete-book-button";
+    import { JoinWaitlistButton } from "@/components/books/join-waitlist-button";
 
     export default async function BookDetailPage({
     params,
@@ -30,17 +32,19 @@
         },
     });
 
-    if (!book || book.ownerId !== session.user.id) {
+    if (!book) {
         notFound();
     }
 
+    const isOwner = book.ownerId === session.user.id;
+
     const now = new Date();
-    const activeLoan = book.loans.find((loan) => !loan.returnedAt);
-    const status = !activeLoan
-        ? "available"
-        : activeLoan.dueDate < now
-        ? "overdue"
-        : "lent";
+    const activeLoans = book.loans.filter((loan) => !loan.returnedAt);
+    const copiesLentOut = activeLoans.length;
+    const copiesFree = book.copiesAvailable - copiesLentOut;
+    const hasOverdue = activeLoans.some((loan) => loan.dueDate < now);
+
+    const status = copiesFree > 0 ? "available" : hasOverdue ? "overdue" : "lent";
 
     const statusStyles = {
         available: "bg-teal/10 text-teal",
@@ -61,7 +65,7 @@
 
             {/* Header: cover | info */}
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-[220px_1fr]">
-            <div className="flex aspect-[2/3] items-center justify-center overflow-hidden rounded-xl bg-ink">
+            <div className="flex aspect-2/3 items-center justify-center overflow-hidden rounded-xl bg-ink">
                 {book.coverUrl ? (
                 <img
                     src={book.coverUrl}
@@ -80,16 +84,18 @@
                 >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                 </span>
-                <div className="flex items-center gap-4">
+                {isOwner && (
+                    <div className="flex items-center gap-4">
                     <Link
-                    href={`/books/${book.id}/edit`}
-                    className="flex items-center gap-1.5 text-sm text-teal hover:underline"
+                        href={`/books/${book.id}/edit`}
+                        className="flex items-center gap-1.5 text-sm text-teal hover:underline"
                     >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit book
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit book
                     </Link>
                     <DeleteBookButton bookId={book.id} />
-                </div>
+                    </div>
+                )}
                 </div>
 
                 <h1 className="text-3xl font-medium text-ink">{book.title}</h1>
@@ -108,24 +114,22 @@
                     <span className="text-ink">{book.isbn}</span>
                     </p>
                 )}
+                <p>
+                    <span className="text-text-label">Format: </span>
+                    <span className="text-ink">
+                    {book.format === "PHYSICAL" ? "Physical" : "Digital"}
+                    </span>
+                </p>
                 </div>
 
                 <div className="mt-auto pt-6">
-                {activeLoan ? (
-                    <div className="flex items-center justify-between rounded-md border border-amber/20 bg-amber/10 px-4 py-3 text-sm text-ink">
-                    <span>
-                        Currently lent to{" "}
-                        <span className="font-medium">{activeLoan.borrowerName}</span>,
-                        due{" "}
-                        <span className="font-medium">
-                        {activeLoan.dueDate.toLocaleDateString()}
-                        </span>
-                    </span>
-                    <MarkReturnedButton loanId={activeLoan.id} />
-                    </div>
-                ) : (
-                    <LendBookButton bookId={book.id} />
-                )}
+                <p className="mb-3 text-sm text-text-secondary">
+                    {copiesFree} of {book.copiesAvailable}{" "}
+                    {book.copiesAvailable === 1 ? "copy" : "copies"} available
+                </p>
+                {copiesFree > 0
+                    ? isOwner && <LendBookButton bookId={book.id} />
+                    : !isOwner && <JoinWaitlistButton bookId={book.id} />}
                 </div>
             </div>
             </div>
@@ -143,6 +147,8 @@
             ) : (
                 book.loans.map((loan, i) => {
                 const isActive = !loan.returnedAt;
+                const isOverdue = isActive && loan.dueDate < now;
+
                 return (
                     <div
                     key={loan.id}
@@ -164,15 +170,33 @@
                             ? loan.returnedAt.toLocaleDateString()
                             : loan.dueDate.toLocaleDateString() + " (due)"}
                         </p>
+                        {isOverdue && (
+                            <p className="mt-0.5 text-xs text-coral">
+                            Fine so far: ${calculateFine(loan.dueDate, null).toFixed(2)}
+                            </p>
+                        )}
+                        {!isActive && loan.fineAmount > 0 && (
+                            <p className="mt-0.5 text-xs text-coral">
+                            Fine: ${loan.fineAmount.toFixed(2)}
+                            </p>
+                        )}
                         </div>
                     </div>
-                    <span
+                    <div className="flex items-center gap-2">
+                        {isOverdue && (
+                        <span className="rounded-full bg-coral/10 px-2.5 py-1 text-xs font-medium text-coral">
+                            Overdue
+                        </span>
+                        )}
+                        {isActive && isOwner && <MarkReturnedButton loanId={loan.id} />}
+                        <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        isActive ? "bg-amber/10 text-amber" : "bg-teal/10 text-teal"
+                            isActive ? "bg-amber/10 text-amber" : "bg-teal/10 text-teal"
                         }`}
-                    >
+                        >
                         {isActive ? "Active" : "Returned"}
-                    </span>
+                        </span>
+                    </div>
                     </div>
                 );
                 })

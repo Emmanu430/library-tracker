@@ -9,7 +9,7 @@
     export default async function BooksPage({
     searchParams,
     }: {
-    searchParams: Promise<{ search?: string }>;
+    searchParams: Promise<{ search?: string; view?: string }>;
     }) {
     const session = await getServerSession(authOptions);
 
@@ -17,10 +17,11 @@
         redirect("/login");
     }
 
-    const { search } = await searchParams;
+    const { search, view } = await searchParams;
+    const showAll = view === "all";
 
     const books = await prisma.book.findMany({
-        where: { ownerId: session.user.id },
+        where: showAll ? {} : { ownerId: session.user.id },
         include: {
         loans: {
             where: { returnedAt: null },
@@ -36,7 +37,8 @@
             <div>
                 <h1 className="text-2xl font-medium text-ink">Books</h1>
                 <p className="text-sm text-text-secondary">
-                {books.length} {books.length === 1 ? "book" : "books"} in your library
+                {books.length} {books.length === 1 ? "book" : "books"}{" "}
+                {showAll ? "across the library" : "in your library"}
                 </p>
             </div>
             <Link
@@ -45,6 +47,26 @@
             >
                 <Plus className="h-4 w-4" />
                 Add book
+            </Link>
+            </div>
+
+            {/* View toggle */}
+            <div className="mb-6 flex items-center gap-2">
+            <Link
+                href="/books"
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                !showAll ? "bg-ink text-parchment" : "text-text-secondary hover:bg-white"
+                }`}
+            >
+                My books
+            </Link>
+            <Link
+                href="/books?view=all"
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                showAll ? "bg-ink text-parchment" : "text-text-secondary hover:bg-white"
+                }`}
+            >
+                All books
             </Link>
             </div>
 

@@ -38,6 +38,8 @@
                 genre: book.genre,
                 isbn: book.isbn,
                 coverUrl: book.coverUrl,
+                copiesAvailable: book.copiesAvailable,
+                format: book.format,
             }}
             />
         </div>

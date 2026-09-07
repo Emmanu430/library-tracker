@@ -10,7 +10,8 @@
         return NextResponse.json({ message: "Not authenticated." }, { status: 401 });
     }
 
-    const { title, author, genre, isbn, coverUrl } = await request.json();
+    const { title, author, genre, isbn, coverUrl, copiesAvailable, format } =
+        await request.json();
 
     if (!title || !author) {
         return NextResponse.json(
@@ -26,6 +27,8 @@
         genre: genre || null,
         isbn: isbn || null,
         coverUrl: coverUrl || null,
+        copiesAvailable: copiesAvailable ?? 1,
+        format: format ?? "PHYSICAL",
         ownerId: session.user.id,
         },
     });

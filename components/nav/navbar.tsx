@@ -12,9 +12,16 @@
     { href: "/loans", label: "Loans" },
     ];
 
-    export function Navbar({ userName }: { userName: string }) {
+    const staffLinks = [
+    { href: "/admin/loans", label: "All Loans" },
+    { href: "/admin/analytics", label: "Analytics" },
+    ];
+
+    export function Navbar({ userName, role }: { userName: string; role: string }) {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const isStaff = role === "LIBRARIAN" || role === "ADMIN";
+    const visibleLinks = isStaff ? [...links, ...staffLinks] : links;
 
     return (
         <div className="border-b border-border-warm">
@@ -25,9 +32,8 @@
                 <span className="font-serif text-xl text-ink">Athenaeum</span>
             </div>
 
-            {/* Desktop nav links — hidden on mobile */}
             <nav className="hidden items-center gap-6 md:flex">
-                {links.map((link) => {
+                {visibleLinks.map((link) => {
                 const isActive = pathname.startsWith(link.href);
                 return (
                     <Link
@@ -46,7 +52,6 @@
             </nav>
             </div>
 
-            {/* Desktop user/logout — hidden on mobile */}
             <div className="hidden items-center gap-4 md:flex">
             <span className="text-sm text-text-secondary">{userName}</span>
             <button
@@ -58,7 +63,6 @@
             </button>
             </div>
 
-            {/* Hamburger icon — hidden on desktop */}
             <button
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -68,10 +72,9 @@
             </button>
         </div>
 
-        {/* Mobile dropdown menu */}
         {mobileMenuOpen && (
             <nav className="flex flex-col gap-1 border-t border-border-warm px-6 py-4 md:hidden">
-            {links.map((link) => {
+            {visibleLinks.map((link) => {
                 const isActive = pathname.startsWith(link.href);
                 return (
                 <Link

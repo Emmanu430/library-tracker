@@ -16,7 +16,7 @@
 
     return (
         <div className="min-h-screen w-full bg-parchment">
-        <Navbar userName={session.user.name ?? ""} />
+        <Navbar userName={session.user.name ?? ""} role={session.user.role} />
         {children}
         </div>
     );

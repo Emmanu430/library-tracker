@@ -29,9 +29,9 @@
         return NextResponse.json({ message: "Book not found." }, { status: 404 });
     }
 
-    if (book.loans.length > 0) {
+    if (book.loans.length >= book.copiesAvailable) {
         return NextResponse.json(
-        { message: "This book is already lent out." },
+        { message: "No copies available to lend." },
         { status: 409 }
         );
     }

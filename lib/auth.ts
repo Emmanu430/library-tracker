@@ -22,7 +22,7 @@
             const isValid = await bcrypt.compare(credentials.password, user.password);
             if (!isValid) return null;
 
-            return { id: user.id, name: user.name, email: user.email };
+            return { id: user.id, name: user.name, email: user.email, role: user.role };
         },
         }),
     ],
@@ -34,12 +34,14 @@
     async jwt({ token, user }) {
         if (user) {
             token.id = user.id;
+            token.role = user.role;
         }
         return token;
         },
         async session({ session, token }) {
         if (session.user) {
             session.user.id = token.id as string;
+            session.user.role = token.role as string;
         }
         return session;
         },

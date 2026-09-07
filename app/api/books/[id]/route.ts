@@ -21,7 +21,8 @@
         return NextResponse.json({ message: "Book not found." }, { status: 404 });
     }
 
-    const { title, author, genre, isbn, coverUrl } = await request.json();
+    const { title, author, genre, isbn, coverUrl, copiesAvailable, format } =
+        await request.json();
 
     if (!title || !author) {
         return NextResponse.json(
@@ -38,6 +39,8 @@
         genre: genre || null,
         isbn: isbn || null,
         coverUrl: coverUrl || null,
+        copiesAvailable: copiesAvailable ?? 1,
+        format: format ?? "PHYSICAL",
         },
     });
 

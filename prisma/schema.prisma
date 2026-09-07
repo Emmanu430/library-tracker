@@ -13,32 +13,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum Role {
+  PATRON
+  LIBRARIAN
+  ADMIN
+}
+
 model User {
   id       String @id @default(cuid())
   name     String
   email    String @unique
   password String
+  role     Role   @default(PATRON)
   books    Book[]
+  reservations Reservation[]
+
+}
+
+enum Format {
+  PHYSICAL
+  DIGITAL
 }
 
 model Book {
-  id       String @id @default(cuid())
-  title    String
-  author   String
-  genre    String?
-  coverUrl String?
-  isbn     String?
-  ownerId  String
-  owner    User   @relation(fields: [ownerId], references: [id])
-  loans    Loan[]
+  id               String  @id @default(cuid())
+  title            String
+  author           String
+  genre            String?
+  coverUrl         String?
+  isbn             String?
+  copiesAvailable  Int     @default(1)
+  format           Format  @default(PHYSICAL)
+  ownerId          String
+  owner            User    @relation(fields: [ownerId], references: [id])
+  loans            Loan[]
+  reservations Reservation[]
 }
+
 
 model Loan {
   id           String    @id @default(cuid())
   bookId       String
   book         Book      @relation(fields: [bookId], references: [id])
   borrowerName String
-  dateLent     DateTime
+  dateLent     DateTime  @default(now())
   dueDate      DateTime
   returnedAt   DateTime?
+  fineAmount   Float     @default(0)
+}
+
+model Reservation {
+  id          String   @id @default(cuid())
+  bookId      String
+  book        Book     @relation(fields: [bookId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  requestedAt DateTime @default(now())
+  notified    Boolean  @default(false)
 }
